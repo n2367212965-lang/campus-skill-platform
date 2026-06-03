@@ -1,0 +1,42 @@
+# === IDE / Editor ===
+.idea/
+.vscode/
+.claude/
+*.iml
+*.iws
+*.ipr
+
+# === Backend (Spring Boot) ===
+campus-skill-platform/target/
+campus-skill-platform/.mvn/wrapper/maven-wrapper.jar
+campus-skill-platform/upload/
+
+# === Frontend (Vue) ===
+campus-skill-platform-frontend/node_modules/
+campus-skill-platform-frontend/dist/
+campus-skill-platform-frontend/dist-ssr/
+campus-skill-platform-frontend/*.local
+
+# === 非项目文件（论文、答辩、参考资料等）===
+参考文献/
+毕业设计图表/
+测试面试通关课程/
+答辩代码讲解/
+*.pdf
+*.pptx
+API接口文档.md
+中期检查表_最终版.txt
+成果验收表_最终版.txt
+毕业论文.txt
+毕设指导记录_校园技能平台_最终版.txt
+立题卡.txt
+答辩稿.txt
+答辩记录_最终版.txt
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+logs/

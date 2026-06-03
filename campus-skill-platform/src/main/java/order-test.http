@@ -1,0 +1,81 @@
+### 订单模块测试
+
+### 1. 测试订单服务是否正常
+GET http://localhost:8080/api/order/test
+
+### 2. 登录获取Token（使用已存在的testuser）
+POST http://localhost:8080/api/user/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "123456"
+}
+
+> {%
+    // 保存Token到全局变量
+    client.global.set("auth_token", response.body.data);
+    client.log("Token: " + response.body.data);
+%}
+
+### 3. 先获取用户信息，得到用户ID
+GET http://localhost:8080/api/user/info
+Authorization: Bearer {{auth_token}}
+
+> {%
+    // 保存用户ID到变量（假设响应中有id字段）
+    // 如果响应结构不同，可能需要手动查看并设置
+    // 根据之前的测试，testuser的用户ID是4
+    client.global.set("user_id", "4");
+%}
+
+### 4. 创建技能订单（需要技能ID和接单方ID）
+### 注意：需要先有一个已发布的技能
+### 假设技能ID为1，接单方ID为4（自己接自己的单，用于测试）
+POST http://localhost:8080/api/order/create-skill?skillId=1&acceptorId=4
+Authorization: Bearer {{auth_token}}
+
+### 5. 创建另一个订单（用于测试不同状态）
+POST http://localhost:8080/api/order/create-skill?skillId=2&acceptorId=4
+Authorization: Bearer {{auth_token}}
+
+### 6. 模拟支付订单（使用正确的密码123456）
+### 注意：需要将{orderId}替换为实际创建的订单ID
+POST http://localhost:8080/api/order/pay?orderId=1&password=123456
+Authorization: Bearer {{auth_token}}
+
+### 7. 开始服务（接单方操作）
+POST http://localhost:8080/api/order/start?orderId=1
+Authorization: Bearer {{auth_token}}
+
+### 8. 确认完成（发布方操作）
+POST http://localhost:8080/api/order/complete?orderId=1
+Authorization: Bearer {{auth_token}}
+
+### 9. 取消另一个订单
+POST http://localhost:8080/api/order/cancel?orderId=2&reason=测试取消订单
+Authorization: Bearer {{auth_token}}
+
+### 10. 获取用户作为发布方的订单列表
+GET http://localhost:8080/api/order/as-publisher
+Authorization: Bearer {{auth_token}}
+
+### 11. 获取用户作为接单方的订单列表
+GET http://localhost:8080/api/order/as-acceptor
+Authorization: Bearer {{auth_token}}
+
+### 12. 获取订单详情
+### 注意：需要将{orderId}替换为实际订单ID
+GET http://localhost:8080/api/order/detail/1
+Authorization: Bearer {{auth_token}}
+
+### 13. 测试支付失败（错误密码）
+POST http://localhost:8080/api/order/pay?orderId=3&password=wrongpassword
+Authorization: Bearer {{auth_token}}
+
+### 14. 测试未登录访问订单列表（应该返回401）
+GET http://localhost:8080/api/order/as-publisher
+
+### 15. 测试查看无权限的订单详情（使用一个不存在的订单ID）
+GET http://localhost:8080/api/order/detail/999
+Authorization: Bearer {{auth_token}}

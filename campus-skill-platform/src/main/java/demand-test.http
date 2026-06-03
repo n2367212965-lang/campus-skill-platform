@@ -1,0 +1,62 @@
+### 需求模块完整测试流程
+
+### 1. 登录获取Token（使用你提供的正确格式）
+POST http://localhost:8080/api/user/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "123456"
+}
+
+> {%
+    // 保存Token到全局变量
+    client.global.set("auth_token", response.body.data);
+    console.log("✅ 登录成功，Token已保存:", client.global.get("auth_token"));
+%}
+
+### 2. 发布第一个需求
+POST http://localhost:8080/demand/publish
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "title": "急需Python数据分析辅导",
+  "category": "学习辅导",
+  "tags": "Python,数据分析,Pandas",
+  "description": "我需要学习Python数据分析，特别是Pandas库的使用，希望有经验的学长能帮忙辅导",
+  "expectedPrice": 80.00,
+  "expectedDuration": 3,
+  "expectedLocation": "线上会议",
+  "contactPhone": "13800138001"
+}
+
+### 3. 发布第二个需求（不同分类）
+POST http://localhost:8080/demand/publish
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "title": "需要PS修图帮助",
+  "category": "设计制作",
+  "tags": "Photoshop,修图,设计",
+  "description": "毕业照需要修图，希望找会PS的同学帮忙",
+  "expectedPrice": 30.00,
+  "expectedDuration": 1,
+  "expectedLocation": "线上",
+  "contactPhone": "13800138001"
+}
+
+### 4. 获取我的需求列表
+GET http://localhost:8080/demand/my
+Authorization: Bearer {{auth_token}}
+
+### 5. 测试空字段发布（最小信息）
+POST http://localhost:8080/demand/publish
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "title": "最小信息测试",
+  "description": "只包含必要字段的测试"
+}

@@ -1,0 +1,47 @@
+### 1. 管理员登录
+POST http://localhost:8080/api/user/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "123456"
+}
+
+> {%
+    client.global.set("admin_token", response.body.data);
+    client.log("管理员token: " + client.global.get("admin_token"));
+%}
+
+### 2. 测试管理员权限 - 应该成功
+GET http://localhost:8080/admin/statistics
+Authorization: Bearer {{admin_token}}
+
+### 3. 查看待审核技能
+GET http://localhost:8080/admin/skill/pending
+Authorization: Bearer {{admin_token}}
+
+### 4. 审核技能通过（修改【技能ID】为实际ID）
+POST http://localhost:8080/admin/skill/audit/1?status=1&remark=测试审核通过
+Authorization: Bearer {{admin_token}}
+
+### 5. 查看用户列表
+GET http://localhost:8080/admin/users
+Authorization: Bearer {{admin_token}}
+
+### 6. 普通用户登录
+POST http://localhost:8080/api/user/login
+Content-Type: application/json
+
+{
+  "username": "student1",
+      "password": "123456"
+}
+
+> {%
+    client.global.set("user_token", response.body.data);
+    client.log("普通用户token: " + client.global.get("user_token"));
+%}
+
+### 7. 普通用户尝试访问管理员接口 - 应该失败 (403)
+GET http://localhost:8080/admin/statistics
+Authorization: Bearer {{user_token}}

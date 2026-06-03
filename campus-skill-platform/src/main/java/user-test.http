@@ -1,0 +1,131 @@
+### 1. 测试用户服务是否正常（GET请求）
+GET http://localhost:8080/api/user/test
+Accept: application/json
+
+### 2. 注册新用户（POST请求）
+POST http://localhost:8080/api/user/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "123456",
+  "phone": "13812345678",
+  "code": "123456"
+}
+
+### 3. 测试注册相同用户名的错误情况
+POST http://localhost:8080/api/user/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "123456",
+  "phone": "13812345679",
+  "code": "123456"
+}
+
+### 4. 测试验证码错误的情况
+POST http://localhost:8080/api/user/register
+Content-Type: application/json
+
+{
+  "username": "testuser2",
+  "password": "123456",
+  "phone": "13812345677",
+  "code": "111111"
+}
+
+### 5. 用户登录（使用我们之前注册的testuser）
+POST http://localhost:8080/api/user/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "123456"
+}
+
+### 6. 用户登录（错误密码测试）
+POST http://localhost:8080/api/user/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "wrongpassword"
+}
+
+### 7. 用户登录（不存在的用户）
+POST http://localhost:8080/api/user/login
+Content-Type: application/json
+
+{
+  "username": "nonexistuser",
+  "password": "123456"
+}
+
+
+### 8. 先登录获取Token（用于后续测试）
+POST http://localhost:8080/api/user/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "123456"
+}
+
+> {%
+    // 这是HTTP Client的脚本，用于保存Token到变量
+    client.global.set("auth_token", response.body.data);
+%}
+
+### 9. 测试Token验证接口
+GET http://localhost:8080/api/user/check-token
+Authorization: Bearer {{auth_token}}
+
+### 10. 获取当前用户信息
+GET http://localhost:8080/api/user/info
+Authorization: Bearer {{auth_token}}
+
+### 11. 更新用户信息
+PUT http://localhost:8080/api/user/update
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "nickname": "新的昵称",
+  "contact": "微信：new_contact"
+}
+
+### 12. 再次获取用户信息（确认更新成功）
+GET http://localhost:8080/api/user/info
+Authorization: Bearer {{auth_token}}
+
+### 13. 测试无Token访问（应该返回401）
+GET http://localhost:8080/api/user/info
+
+### 14. 测试无效Token访问
+GET http://localhost:8080/api/user/info
+Authorization: Bearer invalid.token.here
+
+### 1. 登录获取Token
+POST http://localhost:8080/api/user/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "123456"
+}
+
+> {%
+    client.global.set("auth_token", response.body.data);
+%}
+
+### 2. 头像上传测试
+POST http://localhost:8080/api/user/upload-avatar
+Authorization: Bearer {{auth_token}}
+Content-Type: multipart/form-data; boundary=avatar123
+
+--avatar123
+Content-Disposition: form-data; name="file"; filename="test.jpg"
+
+< D:/test.jpg
+--avatar123--

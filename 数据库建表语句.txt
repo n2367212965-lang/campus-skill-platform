@@ -1,0 +1,180 @@
+-- ============================================================
+-- 校园技能互助平台 数据库建表脚本
+-- 数据库：campus_skill
+-- 引擎：InnoDB  编码：utf8mb4
+-- 说明：技能与需求完全对称设计，7张表统一含逻辑删除字段
+-- ============================================================
+
+CREATE DATABASE IF NOT EXISTS campus_skill
+    DEFAULT CHARACTER SET utf8mb4
+    DEFAULT COLLATE utf8mb4_0900_ai_ci;
+USE campus_skill;
+
+-- ============================================================
+-- 1. 用户表
+-- ============================================================
+DROP TABLE IF EXISTS `user`;
+CREATE TABLE `user` (
+    `id`           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '用户ID',
+    `username`     VARCHAR(50)  NOT NULL              COMMENT '用户名（唯一）',
+    `password`     VARCHAR(100) NOT NULL              COMMENT '密码（MD5加密）',
+    `phone`        VARCHAR(20)  NOT NULL              COMMENT '手机号（唯一）',
+    `nickname`     VARCHAR(50)  DEFAULT NULL          COMMENT '昵称',
+    `avatar`       VARCHAR(255) DEFAULT NULL          COMMENT '头像URL',
+    `email`        VARCHAR(100) DEFAULT NULL          COMMENT '邮箱',
+    `signature`    VARCHAR(200) DEFAULT NULL          COMMENT '个性签名',
+    `contact`      VARCHAR(200) DEFAULT NULL          COMMENT '联系方式（微信/QQ等）',
+    `role`         TINYINT      DEFAULT 0            COMMENT '角色：0-学生，1-管理员',
+    `status`       TINYINT      DEFAULT 0            COMMENT '状态：0-正常，1-禁用',
+    `credit_score` INT          DEFAULT 100          COMMENT '信誉分（默认100）',
+    `create_time`  DATETIME     DEFAULT NULL          COMMENT '创建时间',
+    `update_time`  DATETIME     DEFAULT NULL          COMMENT '更新时间',
+    `deleted`      TINYINT      DEFAULT 0            COMMENT '逻辑删除：0-未删除，1-已删除',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_username` (`username`),
+    UNIQUE KEY `uk_phone`    (`phone`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户表';
+
+-- ============================================================
+-- 2. 技能表（与需求表状态设计完全对称）
+-- ============================================================
+DROP TABLE IF EXISTS `skill`;
+CREATE TABLE `skill` (
+    `id`           BIGINT         NOT NULL AUTO_INCREMENT COMMENT '技能ID',
+    `user_id`      BIGINT         NOT NULL              COMMENT '发布者ID',
+    `title`        VARCHAR(100)   NOT NULL              COMMENT '技能标题',
+    `category`     VARCHAR(50)    NOT NULL              COMMENT '技能分类',
+    `tags`         VARCHAR(200)   DEFAULT NULL          COMMENT '标签（逗号分隔）',
+    `description`  TEXT           DEFAULT NULL          COMMENT '详细描述',
+    `price`        DECIMAL(10,2)  NOT NULL              COMMENT '价格',
+    `duration`     INT            DEFAULT NULL          COMMENT '预计时长（小时）',
+    `location`      VARCHAR(100)   DEFAULT NULL          COMMENT '服务地点',
+    `contact_phone` VARCHAR(20)    DEFAULT NULL          COMMENT '联系电话',
+    `status`        TINYINT        DEFAULT 0            COMMENT '状态：0-待审核，1-审核通过（已上架），2-审核驳回，3-已下架',
+    `audit_remark` VARCHAR(200)   DEFAULT NULL          COMMENT '审核备注',
+    `create_time`  DATETIME       DEFAULT NULL          COMMENT '创建时间',
+    `update_time`  DATETIME       DEFAULT NULL          COMMENT '更新时间',
+    `deleted`      TINYINT        DEFAULT 0            COMMENT '逻辑删除：0-未删除，1-已删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_status`  (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='技能表';
+
+-- ============================================================
+-- 3. 需求表（与技能表状态设计完全对称）
+-- ============================================================
+DROP TABLE IF EXISTS `demand`;
+CREATE TABLE `demand` (
+    `id`                BIGINT         NOT NULL AUTO_INCREMENT COMMENT '需求ID',
+    `user_id`           BIGINT         NOT NULL              COMMENT '发布者ID',
+    `title`             VARCHAR(100)   NOT NULL              COMMENT '需求标题',
+    `category`          VARCHAR(50)    NOT NULL              COMMENT '需求分类',
+    `tags`              VARCHAR(200)   DEFAULT NULL          COMMENT '标签（逗号分隔）',
+    `description`       TEXT           NOT NULL              COMMENT '详细描述',
+    `expected_price`    DECIMAL(10,2)  DEFAULT NULL          COMMENT '期望价格',
+    `expected_duration` INT            DEFAULT NULL          COMMENT '期望时长（小时）',
+    `expected_location` VARCHAR(100)   DEFAULT NULL          COMMENT '期望地点',
+    `contact_phone`     VARCHAR(20)    DEFAULT NULL          COMMENT '联系电话',
+    `status`            TINYINT        DEFAULT 0            COMMENT '状态（与技能表对称）：0-待审核，1-审核通过（已上架），2-审核驳回，3-已下架',
+    `audit_remark`      VARCHAR(200)   DEFAULT NULL          COMMENT '审核备注',
+    `create_time`       DATETIME       DEFAULT NULL          COMMENT '创建时间',
+    `update_time`       DATETIME       DEFAULT NULL          COMMENT '更新时间',
+    `deleted`           TINYINT        DEFAULT 0            COMMENT '逻辑删除：0-未删除，1-已删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_status`  (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='需求表';
+
+-- ============================================================
+-- 4. 订单表
+-- ============================================================
+DROP TABLE IF EXISTS `order_info`;
+CREATE TABLE `order_info` (
+    `id`            BIGINT         NOT NULL AUTO_INCREMENT COMMENT '订单ID',
+    `order_no`      VARCHAR(32)    NOT NULL              COMMENT '订单编号（唯一）',
+    `skill_id`      BIGINT         DEFAULT NULL          COMMENT '关联技能ID',
+    `demand_id`     BIGINT         DEFAULT NULL          COMMENT '关联需求ID',
+    `publisher_id`  BIGINT         NOT NULL              COMMENT '发布方ID',
+    `acceptor_id`   BIGINT         NOT NULL              COMMENT '接单方ID',
+    `amount`        DECIMAL(10,2)  NOT NULL              COMMENT '订单金额',
+    `status`        TINYINT        DEFAULT 0            COMMENT '状态：0-待支付，1-资金托管，2-服务中，3-待确认，4-已完成，5-已取消',
+    `pay_password`  VARCHAR(100)   DEFAULT NULL          COMMENT '支付密码',
+    `start_time`    DATETIME       DEFAULT NULL          COMMENT '服务开始时间',
+    `end_time`      DATETIME       DEFAULT NULL          COMMENT '服务结束时间',
+    `cancel_reason` VARCHAR(200)   DEFAULT NULL          COMMENT '取消原因',
+    `create_time`   DATETIME       DEFAULT NULL          COMMENT '创建时间',
+    `update_time`   DATETIME       DEFAULT NULL          COMMENT '更新时间',
+    `deleted`       TINYINT        DEFAULT 0            COMMENT '逻辑删除：0-未删除，1-已删除',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_order_no` (`order_no`),
+    KEY `idx_publisher`  (`publisher_id`),
+    KEY `idx_acceptor`   (`acceptor_id`),
+    KEY `idx_skill`      (`skill_id`),
+    KEY `idx_demand`     (`demand_id`),
+    KEY `idx_status`     (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='订单表';
+
+-- ============================================================
+-- 5. 评价表
+-- ============================================================
+DROP TABLE IF EXISTS `rating`;
+CREATE TABLE `rating` (
+    `id`           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '评价ID',
+    `order_id`     BIGINT       NOT NULL              COMMENT '关联订单ID',
+    `from_user_id` BIGINT       NOT NULL              COMMENT '评价人ID',
+    `to_user_id`   BIGINT       NOT NULL              COMMENT '被评价人ID',
+    `score`        TINYINT      NOT NULL              COMMENT '评分（1-5分）',
+    `content`      VARCHAR(500) NOT NULL              COMMENT '评价内容',
+    `reply`        VARCHAR(500) DEFAULT NULL          COMMENT '回复内容',
+    `rating_type`  TINYINT      NOT NULL              COMMENT '评价类型：1-发布方评价接单方，2-接单方评价发布方',
+    `create_time`  DATETIME     DEFAULT NULL          COMMENT '创建时间',
+    `update_time`  DATETIME     DEFAULT NULL          COMMENT '更新时间',
+    `deleted`      TINYINT      DEFAULT 0            COMMENT '逻辑删除：0-未删除，1-已删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_order`   (`order_id`),
+    KEY `idx_to_user` (`to_user_id`),
+    KEY `idx_from_user` (`from_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='评价表';
+
+-- ============================================================
+-- 6. 售后纠纷表
+-- ============================================================
+DROP TABLE IF EXISTS `dispute`;
+CREATE TABLE `dispute` (
+    `id`            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '纠纷ID',
+    `order_id`      BIGINT       NOT NULL              COMMENT '关联订单ID',
+    `applicant_id`  BIGINT       NOT NULL              COMMENT '申请人ID',
+    `dispute_type`  TINYINT      NOT NULL              COMMENT '纠纷类型：1-订单取消纠纷，2-服务质量纠纷，3-支付纠纷',
+    `reason`        VARCHAR(500) NOT NULL              COMMENT '纠纷原因',
+    `evidence`      TEXT         DEFAULT NULL          COMMENT '证据',
+    `status`        TINYINT      DEFAULT 0            COMMENT '状态：0-待处理，1-处理中，2-已解决，3-已关闭',
+    `handle_result` VARCHAR(500) DEFAULT NULL          COMMENT '处理结果',
+    `handler_id`    BIGINT       DEFAULT NULL          COMMENT '处理人ID（管理员）',
+    `create_time`   DATETIME     DEFAULT NULL          COMMENT '创建时间',
+    `update_time`   DATETIME     DEFAULT NULL          COMMENT '更新时间',
+    `handle_time`   DATETIME     DEFAULT NULL          COMMENT '处理时间',
+    `deleted`       TINYINT      DEFAULT 0            COMMENT '逻辑删除：0-未删除，1-已删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_order`     (`order_id`),
+    KEY `idx_applicant` (`applicant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='售后纠纷表';
+
+-- ============================================================
+-- 7. 通知表
+-- ============================================================
+DROP TABLE IF EXISTS `notification`;
+CREATE TABLE `notification` (
+    `id`          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '通知ID',
+    `user_id`     BIGINT       NOT NULL              COMMENT '接收用户ID',
+    `title`       VARCHAR(100) NOT NULL              COMMENT '通知标题',
+    `content`     VARCHAR(500) NOT NULL              COMMENT '通知内容',
+    `type`        VARCHAR(30)  DEFAULT NULL          COMMENT '通知类型：ORDER_CREATED/ORDER_PAID/ORDER_STARTED/ORDER_ENDED/ORDER_COMPLETED/ORDER_CANCELLED/DISPUTE_CREATED/DISPUTE_RESOLVED/SKILL_AUDITED/DEMAND_AUDITED',
+    `related_id`  BIGINT       DEFAULT NULL          COMMENT '关联业务ID（订单ID/技能ID/需求ID/纠纷ID）',
+    `is_read`     TINYINT      DEFAULT 0            COMMENT '是否已读：0-未读，1-已读',
+    `create_time` DATETIME     DEFAULT NULL          COMMENT '创建时间',
+    `update_time` DATETIME     DEFAULT NULL          COMMENT '更新时间',
+    `deleted`     TINYINT      DEFAULT 0            COMMENT '逻辑删除：0-未删除，1-已删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_is_read` (`is_read`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='通知表';

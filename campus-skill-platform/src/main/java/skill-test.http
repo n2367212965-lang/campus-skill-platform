@@ -1,0 +1,108 @@
+### 技能模块测试
+
+### 1. 测试技能服务是否正常
+GET http://localhost:8080/api/skill/test
+
+### 2. 登录获取Token（用于需要认证的接口）
+POST http://localhost:8080/api/user/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "123456"
+}
+
+> {%
+    // 保存Token到全局变量
+    client.global.set("auth_token", response.body.data);
+    client.log("Token: " + response.body.data);
+%}
+
+### 3. 发布技能（需要Token）
+POST http://localhost:8080/api/skill/publish
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "title": "Java编程辅导",
+  "category": "编程",
+  "tags": "Java,SpringBoot,MySQL",
+  "description": "提供Java编程基础到高级的辅导，包括面向对象、SpringBoot框架、MySQL数据库等",
+  "price": 50.00,
+  "duration": 10,
+  "location": "线上/线下均可"
+}
+
+### 4. 再发布一个技能
+POST http://localhost:8080/api/skill/publish
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "title": "吉他教学",
+  "category": "音乐",
+  "tags": "吉他,乐器,音乐",
+  "description": "零基础吉他教学，从基础和弦到流行歌曲弹唱",
+  "price": 40.00,
+  "duration": 8,
+  "location": "校内音乐教室"
+}
+
+### 5. 再发布一个技能
+POST http://localhost:8080/api/skill/publish
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "title": "Python数据分析",
+  "category": "编程",
+  "tags": "Python,数据分析,Pandas",
+  "description": "Python数据分析入门，Pandas数据处理，数据可视化",
+  "price": 60.00,
+  "duration": 12,
+  "location": "线上"
+}
+
+### 6. 根据分类获取技能列表（编程类）
+GET http://localhost:8080/api/skill/category?category=编程
+
+### 7. 根据分类获取技能列表（音乐类）
+GET http://localhost:8080/api/skill/category?category=音乐
+
+### 8. 搜索技能（搜索"Java"）
+GET http://localhost:8080/api/skill/search?keyword=Java
+
+### 9. 搜索技能（搜索"数据分析"）
+GET http://localhost:8080/api/skill/search?keyword=数据分析
+
+### 10. 搜索技能（搜索空值，应返回所有）
+GET http://localhost:8080/api/skill/search
+
+### 11. 获取当前用户发布的技能列表（需要Token）
+GET http://localhost:8080/api/skill/my
+Authorization: Bearer {{auth_token}}
+
+### 12. 获取技能详情（使用第3步返回的技能ID）
+### 注意：需要将{id}替换为实际返回的技能ID
+GET http://localhost:8080/api/skill/1
+
+### 13. 测试未登录发布技能（应该返回401）
+POST http://localhost:8080/api/skill/publish
+Content-Type: application/json
+
+{
+  "title": "测试未登录",
+  "category": "测试",
+  "price": 10.00
+}
+
+### 14. 测试必填字段验证（应该返回错误）
+POST http://localhost:8080/api/skill/publish
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "category": "测试",
+  "price": 10.00
+
+}
