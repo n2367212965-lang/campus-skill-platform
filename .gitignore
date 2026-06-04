@@ -2,6 +2,7 @@
 .idea/
 .vscode/
 .claude/
+.trae/
 *.iml
 *.iws
 *.ipr
